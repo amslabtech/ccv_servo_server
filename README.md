@@ -3,7 +3,7 @@ MQTT Service for servo system: publisher and subscriber
 
 
 
-## サーボシステムへのMQTTのゲートウェイ
+## サーボシステムへのMQTTゲートウェイ
 - MQTTサブスクライバを起動し，servo_writeトピックに受けたデータを，サーボシステムに対して出力する．
 - MQTTパプリッシャからサーボシステムのカレントデータを servo_read　トピックへ発信する．
 
