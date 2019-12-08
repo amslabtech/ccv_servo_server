@@ -6,12 +6,12 @@
 #include <sys/time.h>
 #include <mosquitto.hpp>		// c++ wrapper of mosquitto
 #include "DynamixelWrapper.hpp"	// 
-#include "servo_structure.hpp"	// my data structure
+#include "ccv_servo_structure.hpp"	// my data structure
 using namespace std;
 // using namespace dynamixel;
 using namespace servo;
 
-ServoStructure servo_data;
+CcvServoStructure servo_data;
 
 //
 // Dynamixel Servo section
@@ -20,9 +20,10 @@ ServoStructure servo_data;
 class CcvServo : public DynamixelRobotSystem {
   public:
     enum DXLID { DXLID_ROLL=1, DXLID_FORE, DXLID_REAR, DXLID_STEER };
-    enum INDEX { ROLL=0, FORE, REAR, STEER };
+//    enum INDEX { ROLL=0, FORE, REAR, STEER };
     void setup();
-    void run();
+	void run(){};
+    void run(Mosquitto* talker);
 };
 
 void CcvServo::setup() {
@@ -39,7 +40,7 @@ void CcvServo::setup() {
 //  svo[STEER]->position_p_gain(0);
 }
 
-void CcvServo::run() {
+void CcvServo::run(Mosquitto* talker) {
     svo[ROLL ]->torque_enable();
     svo[FORE ]->torque_enable();
     svo[REAR ]->torque_enable();
@@ -53,7 +54,14 @@ void CcvServo::run() {
 
 	// for ...
 	while(1) {
-		sleep(1);
+    	servo_data.present_position[ROLL ] = svo[ROLL ]->present_position_rad();
+    	servo_data.present_position[FORE ] = svo[FORE ]->present_position_rad();
+    	servo_data.present_position[REAR ] = svo[REAR ]->present_position_rad();
+    	servo_data.present_position[STEER] = svo[STEER]->present_position_rad();
+		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
+
+		servo_data.print_read();
+		sleep(1);	// dummy, it shoud be ommitted
 	}
 }
 
@@ -95,14 +103,14 @@ void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 	bcopy(_data, (char*)&servo_data, sizeof(servo_data));		
 //	int32_t diff = (ts.tv_sec-data.ts.tv_sec)*1000000 + ts.tv_usec-data.ts.tv_usec;
 //	std::cout << std::setw(5) << diff << " usec,";
-	servo_data.print();
+	servo_data.print_command();
 
 	// Copying data from publisher
 	// ...
-    ccvservo->goal_position_rad(CcvServo::ROLL , servo_data.position[servo::ROLL ]);
-    ccvservo->goal_position_rad(CcvServo::FORE , servo_data.position[servo::FORE ]);
-    ccvservo->goal_position_rad(CcvServo::REAR , servo_data.position[servo::REAR ]);
-    ccvservo->goal_position_rad(CcvServo::STEER, servo_data.position[servo::STEER]);
+    ccvservo->goal_position_rad(servo::ROLL , servo_data.command_position[servo::ROLL ]);
+    ccvservo->goal_position_rad(servo::FORE , servo_data.command_position[servo::FORE ]);
+    ccvservo->goal_position_rad(servo::REAR , servo_data.command_position[servo::REAR ]);
+    ccvservo->goal_position_rad(servo::STEER, servo_data.command_position[servo::STEER]);
 }
 
 
@@ -115,13 +123,23 @@ int main()
 	//
 	// MQTT Subscriber section
 	//
-	const char* ip_addr  = "localhost";
-	// const char* ip_addr  = "192.168.0.62";
-	const char* username = "servo_command_listener";
 
-	ServoSubscriber servo_command_listener(topic);
-	servo_command_listener.set_username_password(username,password);
-	servo_command_listener.connect(ip_addr);
+	ServoSubscriber servo_command_listener(topic_write);
+	servo_command_listener.set_username_password(servo::name_listener,servo::password);
+	servo_command_listener.connect("localhost");
+	//servo_command_listener.connect("192.168.0.62");
+
+
+	//
+	// MQTT Publisher section
+	//
+
+    Mosquitto servo_data_talker;
+    servo_data_talker.set_username_password(servo::name_talker,servo::password);
+    servo_data_talker.connect("localhost");
+    //servo_data_talker.connect("192.168.0.62");
+    servo_data_talker.subscribe(servo::topic_read);
+
 
 	//
 	// Servo section
@@ -137,11 +155,12 @@ int main()
     ccvservo->add(new Dynamixel_H42P(dxlnet, CcvServo::DXLID_STEER));
     ccvservo->setup();
 
+
 	//
 	// Start event loops
 	//
 	servo_command_listener.loop_start();
-    ccvservo->run();
+    ccvservo->run(&servo_data_talker);
 
 	//
 	// Termination
