@@ -1,4 +1,4 @@
-# servo_server サーボシステムへのMQTTゲートウェイ
+# servo_server - サーボシステムへのMQTTゲートウェイ
 MQTT Service for servo system: publisher and subscriber
 
 
