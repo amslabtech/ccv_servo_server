@@ -48,8 +48,8 @@ struct CcvServoStructure {
 
 namespace servo {
 	enum { ROLL=0, FORE, REAR, STEER };
-	const char* name_talker		= "servo_data_talker";
-	const char* name_listener	= "servo_command_listener";
+//	const char* name_talker		= "servo_data_talker";
+//	const char* name_listener	= "servo_command_listener";
 	const char* topic_read		= "servo_read";
 	const char* topic_write		= "servo_write";
 	const char* password		= "mqtt";

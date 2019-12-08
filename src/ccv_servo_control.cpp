@@ -123,9 +123,9 @@ int main()
 	//
 	// MQTT Subscriber section
 	//
-
+	const char* name_listener	= "servo_command_listener";
 	ServoSubscriber servo_command_listener(topic_write);
-	servo_command_listener.set_username_password(servo::name_listener,servo::password);
+	servo_command_listener.set_username_password(name_listener,servo::password);
 	servo_command_listener.connect("localhost");
 	//servo_command_listener.connect("192.168.0.62");
 
@@ -133,9 +133,9 @@ int main()
 	//
 	// MQTT Publisher section
 	//
-
+	const char* name_talker		= "servo_data_talker";
     Mosquitto servo_data_talker;
-    servo_data_talker.set_username_password(servo::name_talker,servo::password);
+    servo_data_talker.set_username_password(name_talker,servo::password);
     servo_data_talker.connect("localhost");
     //servo_data_talker.connect("192.168.0.62");
     servo_data_talker.subscribe(servo::topic_read);
