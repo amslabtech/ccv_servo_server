@@ -2,6 +2,7 @@
 //	Servo Control Publisher/Subscriber
 //
 #include <iostream>
+#include <mutex>
 #include <time.h>
 #include <sys/time.h>
 #include <mosquitto.hpp>		// c++ wrapper of mosquitto
@@ -12,6 +13,8 @@ using namespace std;
 using namespace servo;
 
 CcvServoStructure servo_data;
+
+std::mutex mutex_servo;
 
 //
 // Dynamixel Servo section
@@ -27,6 +30,8 @@ class CcvServo : public DynamixelRobotSystem {
 };
 
 void CcvServo::setup() {
+
+	mutex_servo.lock();
     // disable anyway, for safety
     svo[ROLL ]->torque_disable();
     svo[FORE ]->torque_disable();
@@ -38,9 +43,11 @@ void CcvServo::setup() {
     svo[REAR ]->profile_acceleration(1800.0F);
     svo[STEER]->profile_acceleration(1800.0F);
 //  svo[STEER]->position_p_gain(0);
+	mutex_servo.unlock();
 }
 
 void CcvServo::run(Mosquitto* talker) {
+	mutex_servo.lock();
     svo[ROLL ]->torque_enable();
     svo[FORE ]->torque_enable();
     svo[REAR ]->torque_enable();
@@ -50,18 +57,33 @@ void CcvServo::run(Mosquitto* talker) {
     svo[FORE ]->goal_position_deg(0);
     svo[REAR ]->goal_position_deg(0);
     svo[STEER]->goal_position_deg(0);
-    usleep(3000*1000);
+	mutex_servo.unlock();
 
 	// for ...
+	servo_data.id = 0;
 	while(1) {
-    	servo_data.present_position[ROLL ] = svo[ROLL ]->present_position_rad();
-    	servo_data.present_position[FORE ] = svo[FORE ]->present_position_rad();
-    	servo_data.present_position[REAR ] = svo[REAR ]->present_position_rad();
-    	servo_data.present_position[STEER] = svo[STEER]->present_position_rad();
+		servo_data.id++;
+
+		mutex_servo.lock();
+//    	servo_data.present_position[ROLL ] = svo[ROLL ]->present_position_deg();
+		mutex_servo.unlock();
+
+		mutex_servo.lock();
+//    	servo_data.present_position[FORE ] = svo[FORE ]->present_position_deg();
+		mutex_servo.unlock();
+
+		mutex_servo.lock();
+//    	servo_data.present_position[REAR ] = svo[REAR ]->present_position_deg();
+		mutex_servo.unlock();
+
+		mutex_servo.lock();
+    	servo_data.present_position[STEER] = svo[STEER]->present_position_deg();
+		mutex_servo.unlock();
+
 		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
 
-		servo_data.print_read();
-		sleep(1);	// dummy, it shoud be ommitted
+		//servo_data.print_read();
+		//usleep(100*1000);	// dummy, it shoud be ommitted
 	}
 }
 
@@ -103,14 +125,24 @@ void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 	bcopy(_data, (char*)&servo_data, sizeof(servo_data));		
 //	int32_t diff = (ts.tv_sec-data.ts.tv_sec)*1000000 + ts.tv_usec-data.ts.tv_usec;
 //	std::cout << std::setw(5) << diff << " usec,";
-	servo_data.print_command();
+//	servo_data.print_command();
 
 	// Copying data from publisher
-	// ...
-    ccvservo->goal_position_rad(servo::ROLL , servo_data.command_position[servo::ROLL ]);
-    ccvservo->goal_position_rad(servo::FORE , servo_data.command_position[servo::FORE ]);
-    ccvservo->goal_position_rad(servo::REAR , servo_data.command_position[servo::REAR ]);
+	mutex_servo.lock();
+//    ccvservo->goal_position_rad(servo::ROLL , servo_data.command_position[servo::ROLL ]);
+	mutex_servo.unlock();
+
+	mutex_servo.lock();
+//    ccvservo->goal_position_rad(servo::FORE , servo_data.command_position[servo::FORE ]);
+	mutex_servo.unlock();
+
+	mutex_servo.lock();
+//    ccvservo->goal_position_rad(servo::REAR , servo_data.command_position[servo::REAR ]);
+	mutex_servo.unlock();
+
+	mutex_servo.lock();
     ccvservo->goal_position_rad(servo::STEER, servo_data.command_position[servo::STEER]);
+	mutex_servo.unlock();
 }
 
 
@@ -145,7 +177,7 @@ int main()
 	// Servo section
 	//
     DynamixelNetwork::create
-        ("/dev/ttyUSB0", DynamixelNetwork::PROTOCOL2, DynamixelNetwork::BAUDRATE_1M);
+        ("/dev/ttyUSB0", DynamixelNetwork::PROTOCOL2, DynamixelNetwork::BAUDRATE_4M);
     DynamixelNetwork* dxlnet = DynamixelNetwork::getNetworkPointer();
 
 //    CcvServo* ccvservo = new CcvServo;

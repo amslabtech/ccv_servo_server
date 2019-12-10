@@ -15,9 +15,8 @@ link_directories(${DXL_WRAPPER})
 add_executable(ccv_servo_control src/ccv_servo_control.cpp)
 add_executable(ccv_remote src/ccv_remote.cpp)
 
-target_link_libraries(ccv_servo_control mosquitto dxl_wrapper dxl_x64_cpp rt) # RegularPC
-#target_link_libraries(ccv_servo_control dxl_wrapper dxl_sbc_cpp rt)	# Raspberry Pi
-
+# target_link_libraries(ccv_servo_control mosquitto dxl_wrapper dxl_x64_cpp rt) # RegularPC
+target_link_libraries(ccv_servo_control mosquitto dxl_wrapper dxl_sbc_cpp rt)	# Raspberry Pi
 target_link_libraries(ccv_remote mosquitto)
 
 
