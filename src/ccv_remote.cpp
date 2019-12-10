@@ -51,16 +51,22 @@ void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
+	char* ip_addr = (char*)"192.168.0.172";
+	if(argc>1) {
+		ip_addr = argv[1];
+	}
+	std::cout << "connecting " << ip_addr << " ...\n";
+
 	//
 	// MQTT Subscriber section
 	//
 	const char* name_catcher	= "servo_data_catcher";
 	ServoSubscriber servo_data_catcher(topic_read);
 	servo_data_catcher.set_username_password(name_catcher,servo::password);
-	servo_data_catcher.connect("localhost");
-	//servo_command_listener.connect("192.168.0.62");
+	servo_data_catcher.connect(ip_addr);
+
 
 	//
 	// MQTT Publisher section
@@ -68,8 +74,7 @@ int main()
 	const char* name_commander		= "servo_servo_commander";
     Mosquitto servo_commander;
     servo_commander.set_username_password(name_commander,servo::password);
-    servo_commander.connect("localhost");
-    //servo_data_talker.connect("192.168.0.62");
+    servo_commander.connect(ip_addr);
     servo_commander.subscribe(servo::topic_write);
 
 
@@ -79,13 +84,13 @@ int main()
 	servo_data_catcher.loop_start();
 
 	for(int i=0; ; i++) {
-		servo_data.id = i;
+//		servo_data.id = i;
 		servo_data.command_position[servo::ROLL ] = 0;
 		servo_data.command_position[servo::FORE ] = 0;
 		servo_data.command_position[servo::REAR ] = 0;
-		servo_data.command_position[servo::STEER] = 20.0F*M_PI/180*sin(i/10);
+		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI);
 		servo_commander.publish(servo::topic_write,&servo_data,sizeof(servo_data));
-		usleep(1000*1000);
+		usleep(100*1000);
 	}
 
 	//
