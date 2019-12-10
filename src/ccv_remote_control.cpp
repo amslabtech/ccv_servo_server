@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 		servo_data.command_position[servo::ROLL ] = -robot::pose[0];
 		servo_data.command_position[servo::FORE ] = 0;
 		servo_data.command_position[servo::REAR ] = 0;
-		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI);
+		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI/2);
 		servo_commander.publish(servo::topic_write,&servo_data,sizeof(servo_data));
 		usleep(100*1000);
 	}
