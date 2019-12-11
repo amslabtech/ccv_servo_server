@@ -12,3 +12,7 @@ MQTT Service for servo system: publisher and subscriber
 ## Packet
 see ccv_servo_structure.hpp
 
+
+## サービスへの登録
+基本的に本プログラムはシステムのサービスに登録して、システム起動時に自動起動させて用いる。
+
