@@ -9,6 +9,16 @@
 #include <time.h>
 #include <sys/time.h>
 
+namespace servo {
+	enum { ROLL=0, FORE, REAR, STEER, NSERVOS };
+//	const char* name_talker		= "servo_data_talker";
+//	const char* name_listener	= "servo_command_listener";
+	const char* topic_read		= "servo_read";
+	const char* topic_write		= "servo_write";
+	const char* password		= "mqtt";
+};
+
+
 struct CcvServoStructure {
 	int32_t id;
 //	struct timeval ts;
@@ -19,8 +29,8 @@ struct CcvServoStructure {
 	// position[2] ... PITCH REAR
 	// position[3] ... STEER
 
-	float  command_position[4];	// servo positions
-	float  present_position[4];	// servo positions
+	float  command_position[servo::NSERVOS];	// servo positions
+	float  present_position[servo::NSERVOS];	// servo positions
 
 	void print_command() {
 		std::cout
@@ -45,16 +55,6 @@ struct CcvServoStructure {
 		<< std::endl;
 	}
 };
-
-namespace servo {
-	enum { ROLL=0, FORE, REAR, STEER };
-//	const char* name_talker		= "servo_data_talker";
-//	const char* name_listener	= "servo_command_listener";
-	const char* topic_read		= "servo_read";
-	const char* topic_write		= "servo_write";
-	const char* password		= "mqtt";
-};
-
 
 
 

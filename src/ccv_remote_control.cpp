@@ -137,12 +137,12 @@ int main(int argc, char* argv[])
 	servo_data_catcher.loop_start();
 
 	for(int i=0; ; i++) {
-		servo_data.command_position[servo::ROLL ] = -robot::pose[0];
+		servo_data.command_position[servo::ROLL ] = -robot::pose[0]/4;
 		servo_data.command_position[servo::FORE ] = 0;
 		servo_data.command_position[servo::REAR ] = 0;
 		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI/2);
 		servo_commander.publish(servo::topic_write,&servo_data,sizeof(servo_data));
-		usleep(100*1000);
+		usleep(10*1000);
 	}
 
 
