@@ -2,7 +2,7 @@
 //	Servo Control Publisher/Subscriber
 //
 #include <iostream>
-#include <mutex>
+//#include <mutex>
 #include <time.h>
 #include <sys/time.h>
 #include <mosquitto.hpp>		// c++ wrapper of mosquitto
@@ -13,7 +13,6 @@ using namespace servo;
 
 CcvServoStructure servo_data;
 
-// std::mutex mutex_servo;
 
 //
 // Dynamixel Servo section
@@ -30,7 +29,6 @@ class CcvServo : public DynamixelRobotSystem {
 
 void CcvServo::setup()
 {
-	mutex_servo.lock();
     // disable anyway, for safety
     svo[ROLL ]->torque_disable();
     svo[FORE ]->torque_disable();
@@ -43,12 +41,10 @@ void CcvServo::setup()
     svo[STEER]->profile_acceleration(1800.0F);
 
 //  svo[STEER]->position_p_gain(0);
-	mutex_servo.unlock();
 }
 
 void CcvServo::run(Mosquitto* talker)
 {
-	mutex_servo.lock();
     svo[ROLL ]->torque_enable();
     svo[FORE ]->torque_enable();
     svo[REAR ]->torque_enable();
@@ -56,15 +52,18 @@ void CcvServo::run(Mosquitto* talker)
 
 	float goal[] = { 0, 0, 0, 0 };
 	sync_goal_position_deg(goal);
-	mutex_servo.unlock();
-	usleep(3000*1000);
 
-	// for ...
-	servo_data.id = 0;
-	while(1) {
-		servo_data.id++;
+	usleep(1000*1000);
 
-		sync_present_position_rad(servo_data.present_position);
+	for(int i=0; ; i++) {
+//		std::cout << "send present position" << std::endl;
+
+		servo_data.id = i;
+//		sync_present_position_rad(servo_data.present_position);
+		servo_data.present_position[ROLL ] = svo[ROLL ]->present_position_rad();
+		servo_data.present_position[FORE ] = svo[FORE ]->present_position_rad();
+		servo_data.present_position[REAR ] = svo[REAR ]->present_position_rad();
+		servo_data.present_position[STEER] = svo[STEER]->present_position_rad();
 
 		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
 
@@ -102,7 +101,7 @@ void ServoSubscriber::onConnected()
 void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 {
 //	gettimeofday(&ts,NULL);
-	bcopy(_data, (char*)&servo_data, sizeof(servo_data));		
+	bcopy(_data, (char*)&servo_data.command_position, sizeof(servo_data.command_position));		
 //	int32_t diff = (ts.tv_sec-data.ts.tv_sec)*1000000 + ts.tv_usec-data.ts.tv_usec;
 //	std::cout << std::setw(5) << diff << " usec,";
 //	servo_data.print_command();
