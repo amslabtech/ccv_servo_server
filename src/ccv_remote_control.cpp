@@ -8,11 +8,15 @@
 #include "ccv_servo_structure.hpp"	// my data structure
 #include "imu_structure.hpp"	// my data structure
 #include <math.h>
+#include <mutex>
 
 using namespace std;
 using namespace servo;
 
 CcvServoStructure servo_data;
+std::mutex  mtx_pose;
+volatile bool pose_update = false;
+
 
 //
 // MQTT section
@@ -80,18 +84,14 @@ void ImuSubscriber::onConnected()
 void ImuSubscriber::onMessage(std::string _topic, void* _data, int _len)
 {
 //	gettimeofday(&ts,NULL);
+	mtx_pose.lock();
 	bcopy(_data, (char*)&data, sizeof(data));		
-
-
 	robot::pose[0] = data.fusion[0];
 	robot::pose[1] = data.fusion[1];
 	robot::pose[2] = data.fusion[2];
+	pose_update = true;
+	mtx_pose.unlock();
 }
-
-
-
-
-
 
 
 
@@ -137,14 +137,21 @@ int main(int argc, char* argv[])
 	servo_data_catcher.loop_start();
 
 	for(int i=0; ; i++) {
-		servo_data.command_position[servo::ROLL ] = -robot::pose[0]/4;
-		servo_data.command_position[servo::FORE ] = 0;
-		servo_data.command_position[servo::REAR ] = 0;
-		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI/2);
-		servo_commander.publish(servo::topic_write,&servo_data,sizeof(servo_data));
-		usleep(10*1000);
-	}
+		if(pose_update==true) {
+			mtx_pose.lock();
+			servo_data.command_position[servo::ROLL ] = -robot::pose[0]/4;
+			servo_data.command_position[servo::FORE ] = -robot::pose[1]/4;
+			servo_data.command_position[servo::REAR ] =  robot::pose[1]/4;
+			servo_data.command_position[servo::STEER] = 
+									12.0F*M_PI/180*sin(i/M_PI/200);
+			pose_update = false;
+			mtx_pose.unlock();
 
+			servo_commander.publish(servo::topic_write,
+				&servo_data.command_position,sizeof(servo_data.command_position));
+		}
+		usleep(5*1000);
+	}
 
 	//
 	// Termination
