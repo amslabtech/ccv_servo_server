@@ -6,7 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <mosquitto.hpp>		// c++ wrapper of mosquitto
-#include "DynamixelWrapper.hpp"	// 
+#include "DynamixelWrapper.hpp"	//
 #include "ccv_servo_structure.hpp"	// my data structure
 using namespace std;
 using namespace servo;
@@ -50,7 +50,7 @@ void CcvServo::run(Mosquitto* talker)
     svo[REAR ]->torque_enable();
     svo[STEER]->torque_enable();
 
-	float goal[] = { 0, 0, 0, 0 };
+	float goal[] = { -1, 1.5, -1.5, 0 };
 	sync_goal_position_deg(goal);
 
 	usleep(1000*1000);
@@ -101,7 +101,7 @@ void ServoSubscriber::onConnected()
 void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 {
 //	gettimeofday(&ts,NULL);
-	bcopy(_data, (char*)&servo_data.command_position, sizeof(servo_data.command_position));		
+	bcopy(_data, (char*)&servo_data.command_position, sizeof(servo_data.command_position));
 //	int32_t diff = (ts.tv_sec-data.ts.tv_sec)*1000000 + ts.tv_usec-data.ts.tv_usec;
 //	std::cout << std::setw(5) << diff << " usec,";
 //	servo_data.print_command();
