@@ -35,9 +35,9 @@ void CcvServo::setup()
     svo[REAR ]->torque_disable();
     svo[STEER]->torque_disable();
 
-    svo[ROLL ]->profile_acceleration(3600.0F);
-    svo[FORE ]->profile_acceleration(3600.0F);
-    svo[REAR ]->profile_acceleration(3600.0F);
+    svo[ROLL ]->profile_acceleration(1000.0F);
+    svo[FORE ]->profile_acceleration(1000.0F);
+    svo[REAR ]->profile_acceleration(1000.0F);
     svo[STEER]->profile_acceleration(1800.0F);
 
 //  svo[STEER]->position_p_gain(0);
@@ -53,7 +53,11 @@ void CcvServo::run(Mosquitto* talker)
 	float goal[] = { -1, 1.5, -1.5, 0 };
 	sync_goal_position_deg(goal);
 
-	usleep(1000*1000);
+	usleep(3000*1000);
+
+    svo[ROLL ]->profile_acceleration(3600.0F);
+    svo[FORE ]->profile_acceleration(3600.0F);
+    svo[REAR ]->profile_acceleration(3600.0F);
 
 	for(int i=0; ; i++) {
 //		std::cout << "send present position" << std::endl;
