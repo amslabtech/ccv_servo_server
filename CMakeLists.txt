@@ -26,4 +26,7 @@ INSTALL (
 	RUNTIME DESTINATION /usr/local/bin
 )
 
-
+INSTALL (
+    FILES include/ccv_servo_structure.hpp
+    DESTINATION include
+)
