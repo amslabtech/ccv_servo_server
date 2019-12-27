@@ -12,7 +12,7 @@ using namespace std;
 using namespace servo;
 
 CcvServoStructure servo_data;
-
+static volatile bool command_updated = false;
 
 //
 // Dynamixel Servo section
@@ -35,9 +35,9 @@ void CcvServo::setup()
     svo[REAR ]->torque_disable();
     svo[STEER]->torque_disable();
 
-    svo[ROLL ]->profile_acceleration(1000.0F);
-    svo[FORE ]->profile_acceleration(1000.0F);
-    svo[REAR ]->profile_acceleration(1000.0F);
+    svo[ROLL ]->profile_acceleration( 500.0F);
+    svo[FORE ]->profile_acceleration( 500.0F);
+    svo[REAR ]->profile_acceleration( 500.0F);
     svo[STEER]->profile_acceleration(1800.0F);
 
 //  svo[STEER]->position_p_gain(0);
@@ -55,9 +55,9 @@ void CcvServo::run(Mosquitto* talker)
 
 	usleep(3000*1000);
 
-    svo[ROLL ]->profile_acceleration(3600.0F);
-    svo[FORE ]->profile_acceleration(3600.0F);
-    svo[REAR ]->profile_acceleration(3600.0F);
+    svo[ROLL ]->profile_acceleration(1800.0F);
+    svo[FORE ]->profile_acceleration(1800.0F);
+    svo[REAR ]->profile_acceleration(1800.0F);
 
 	for(int i=0; ; i++) {
 //		std::cout << "send present position" << std::endl;
@@ -71,7 +71,14 @@ void CcvServo::run(Mosquitto* talker)
 
 		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
 
-		usleep(10*1000);	// dummy, it shoud be ommitted
+		usleep(5*1000);	// dummy, it shoud be ommitted
+
+		// Copying data from publisher
+		if(command_updated==true) {
+   			//ccvservo->sync_goal_position_rad(servo_data.command_position);
+   			sync_goal_position_rad(servo_data.command_position);
+			command_updated = false;
+		}
 	}
 }
 
@@ -111,7 +118,8 @@ void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 //	servo_data.print_command();
 
 	// Copying data from publisher
-   	ccvservo->sync_goal_position_rad(servo_data.command_position);
+//   	ccvservo->sync_goal_position_rad(servo_data.command_position);
+	command_updated = true;
 }
 
 
