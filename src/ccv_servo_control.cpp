@@ -112,10 +112,13 @@ void ServoSubscriber::onConnected()
 void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 {
 //	gettimeofday(&ts,NULL);
-	bcopy(_data, (char*)&servo_data.command_position, sizeof(servo_data.command_position));
+	// bcopy(_data, (char*)&servo_data.command_position, sizeof(servo_data.command_position));
+    CcvServoStructure* received_data = NULL;
+    received_data = (CcvServoStructure*)_data;
+	bcopy(received_data->command_position, (char*)&servo_data.command_position, sizeof(servo_data.command_position));
 //	int32_t diff = (ts.tv_sec-data.ts.tv_sec)*1000000 + ts.tv_usec-data.ts.tv_usec;
 //	std::cout << std::setw(5) << diff << " usec,";
-//	servo_data.print_command();
+	// servo_data.print_command();
 
 	// Copying data from publisher
 //   	ccvservo->sync_goal_position_rad(servo_data.command_position);
