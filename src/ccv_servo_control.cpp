@@ -147,7 +147,7 @@ int main()
 	// Servo section
 	//
     DynamixelNetwork::create
-        ("/dev/ttyUSB0", DynamixelNetwork::PROTOCOL2, DynamixelNetwork::BAUDRATE_4M);
+        ("/dev/DXLSERVO", DynamixelNetwork::PROTOCOL2, DynamixelNetwork::BAUDRATE_4M);
     DynamixelNetwork* dxlnet = DynamixelNetwork::getNetworkPointer();
 
 	CcvServo* ccvservo = new CcvServo(dxlnet);
