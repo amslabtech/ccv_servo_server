@@ -73,7 +73,7 @@ void CcvServo::run(Mosquitto* talker)
 
 		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
 
-		usleep(5*1000);	// dummy, it shoud be ommitted
+		usleep(1000);	// dummy, it shoud be ommitted
 
 		// Copying data from publisher
 		if(command_updated==true) {
@@ -81,6 +81,8 @@ void CcvServo::run(Mosquitto* talker)
    			sync_goal_position_rad(servo_data.command_position);
 			command_updated = false;
 		}
+
+		usleep(1000);	// dummy, it shoud be ommitted
 	}
 }
 
