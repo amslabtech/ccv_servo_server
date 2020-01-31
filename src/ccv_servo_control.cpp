@@ -12,7 +12,7 @@ using namespace std;
 using namespace servo;
 
 CcvServoStructure servo_data;
-static volatile bool command_updated = false;
+static volatile uint32_t command_updated = 0;
 
 //
 // Dynamixel Servo section
@@ -20,7 +20,7 @@ static volatile bool command_updated = false;
 
 class CcvServo : public DynamixelRobotSystem {
   public:
-    enum DXLID { DXLID_ROLL=1, DXLID_FORE, DXLID_REAR, DXLID_STEER };
+    enum DXLID { DXLID_ROLL=1, DXLID_FORE, DXLID_REAR, DXLID_STRR, DXLID_STRL };
 	CcvServo(DynamixelNetwork* _dnet):DynamixelRobotSystem(_dnet){}
     void setup();
 	void run(){};
@@ -30,33 +30,20 @@ class CcvServo : public DynamixelRobotSystem {
 void CcvServo::setup()
 {
     // disable anyway, for safety
-    svo[ROLL ]->torque_disable();
-    svo[FORE ]->torque_disable();
-    svo[REAR ]->torque_disable();
-    svo[STEER]->torque_disable();
-
-    svo[ROLL ]->profile_acceleration( 500.0F);
-    svo[FORE ]->profile_acceleration( 500.0F);
-    svo[REAR ]->profile_acceleration( 500.0F);
-    svo[STEER]->profile_acceleration(1800.0F);
+    torque_disable();
+    profile_acceleration( 500.0F);
 
 //  svo[STEER]->position_p_gain(0);
 
 	// Stand-up operation
-	//
-    svo[ROLL ]->torque_enable();
-    svo[FORE ]->torque_enable();
-    svo[REAR ]->torque_enable();
-    svo[STEER]->torque_enable();
+    torque_enable();
 
-	float goal[] = { -1, 3+1.5, 3-1.5, 0 };
-	sync_goal_position_deg(goal);
+	float goal[] = { -1, 3+1.5, 3-1.5, 0, 0 };
+	goal_position_deg(goal);
 
 	usleep(3000*1000);	// waiting for standing up
 
-    svo[ROLL ]->profile_acceleration(1800.0F);
-    svo[FORE ]->profile_acceleration(1800.0F);
-    svo[REAR ]->profile_acceleration(1800.0F);
+    profile_acceleration(1500.0F);
 }
 
 void CcvServo::run(Mosquitto* talker)
@@ -66,20 +53,21 @@ void CcvServo::run(Mosquitto* talker)
 
 		servo_data.id = i;
 //		sync_present_position_rad(servo_data.present_position);
-		servo_data.present_position[ROLL ] = svo[ROLL ]->present_position_rad();
-		servo_data.present_position[FORE ] = svo[FORE ]->present_position_rad();
-		servo_data.present_position[REAR ] = svo[REAR ]->present_position_rad();
-		servo_data.present_position[STEER] = svo[STEER]->present_position_rad();
+		servo_data.present_position[ROLL] = svo[ROLL]->present_position_rad();
+		servo_data.present_position[FORE] = svo[FORE]->present_position_rad();
+		servo_data.present_position[REAR] = svo[REAR]->present_position_rad();
+		servo_data.present_position[STRR] = svo[STRR]->present_position_rad();
+		servo_data.present_position[STRL] = svo[STRL]->present_position_rad();
 
 		talker->publish(servo::topic_read,&servo_data,sizeof(servo_data));
 
 		usleep(1000);	// dummy, it shoud be ommitted
 
 		// Copying data from publisher
-		if(command_updated==true) {
+		if(command_updated>0) {
    			//ccvservo->sync_goal_position_rad(servo_data.command_position);
-   			sync_goal_position_rad(servo_data.command_position);
-			command_updated = false;
+   			goal_position_rad(servo_data.command_position);
+			command_updated = 0;
 		}
 
 		usleep(1000);	// dummy, it shoud be ommitted
@@ -126,7 +114,7 @@ void ServoSubscriber::onMessage(std::string _topic, void* _data, int _len)
 
 	// Copying data from publisher
 //   	ccvservo->sync_goal_position_rad(servo_data.command_position);
-	command_updated = true;
+	command_updated++;
 }
 
 
@@ -156,7 +144,8 @@ int main()
     ccvservo->add(new Dynamixel_H54P(dxlnet, CcvServo::DXLID_ROLL));
     ccvservo->add(new Dynamixel_H54P(dxlnet, CcvServo::DXLID_FORE));
     ccvservo->add(new Dynamixel_H54P(dxlnet, CcvServo::DXLID_REAR));
-    ccvservo->add(new Dynamixel_H42P(dxlnet, CcvServo::DXLID_STEER));
+    ccvservo->add(new Dynamixel_H42P(dxlnet, CcvServo::DXLID_STRR));
+    ccvservo->add(new Dynamixel_H42P(dxlnet, CcvServo::DXLID_STRL));
     ccvservo->setup();
 
 	//

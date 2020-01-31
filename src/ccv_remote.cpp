@@ -85,10 +85,11 @@ int main(int argc, char* argv[])
 
 	for(int i=0; ; i++) {
 //		servo_data.id = i;
-		servo_data.command_position[servo::ROLL ] = 0;
-		servo_data.command_position[servo::FORE ] = 0;
-		servo_data.command_position[servo::REAR ] = 0;
-		servo_data.command_position[servo::STEER] = 24.0F*M_PI/180*sin(i/M_PI/50);
+		servo_data.command_position[servo::ROLL] = 0;
+		servo_data.command_position[servo::FORE] = 0;
+		servo_data.command_position[servo::REAR] = 0;
+		servo_data.command_position[servo::STRR] = 24.0F*M_PI/180*sin(i/M_PI/50);
+		servo_data.command_position[servo::STRL] =-12.0F*M_PI/180*sin(i/M_PI/50);
 		servo_commander.publish(servo::topic_write,&servo_data,sizeof(servo_data));
 		usleep(10*1000);
 	}

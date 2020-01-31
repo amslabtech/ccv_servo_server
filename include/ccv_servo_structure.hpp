@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 namespace servo {
-	enum { ROLL=0, FORE, REAR, STEER, NSERVOS };
+	enum { ROLL=0, FORE, REAR, STRR, STRL, NSERVOS };
 //	const char* name_talker		= "servo_data_talker";
 //	const char* name_listener	= "servo_command_listener";
 	const char* topic_read		= "servo_read";
@@ -27,7 +27,8 @@ struct CcvServoStructure {
 	// position[0] ... ROLL
 	// position[1] ... PITCH FORE
 	// position[2] ... PITCH REAR
-	// position[3] ... STEER
+	// position[3] ... STEER R
+	// position[4] ... STEER L
 
 	float  command_position[servo::NSERVOS];	// servo positions
 	float  present_position[servo::NSERVOS];	// servo positions
@@ -41,6 +42,7 @@ struct CcvServoStructure {
 		<< std::setw(12) << command_position[1]
 		<< std::setw(12) << command_position[2]
 		<< std::setw(12) << command_position[3]
+		<< std::setw(12) << command_position[4]
 		<< std::endl;
 	}
 	void print_read() {
@@ -52,6 +54,7 @@ struct CcvServoStructure {
 		<< std::setw(12) << present_position[1]
 		<< std::setw(12) << present_position[2]
 		<< std::setw(12) << present_position[3]
+		<< std::setw(12) << present_position[4]
 		<< std::endl;
 	}
 };

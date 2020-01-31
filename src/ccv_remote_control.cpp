@@ -139,11 +139,13 @@ int main(int argc, char* argv[])
 	for(int i=0; ; i++) {
 		if(pose_update==true) {
 			mtx_pose.lock();
-			servo_data.command_position[servo::ROLL ] = -robot::pose[0]/4;
-			servo_data.command_position[servo::FORE ] = -robot::pose[1]/4;
-			servo_data.command_position[servo::REAR ] =  robot::pose[1]/4;
-			servo_data.command_position[servo::STEER] = 
+			servo_data.command_position[servo::ROLL] = -robot::pose[0]/4;
+			servo_data.command_position[servo::FORE] = -robot::pose[1]/4;
+			servo_data.command_position[servo::REAR] =  robot::pose[1]/4;
+			servo_data.command_position[servo::STRR] = 
 									12.0F*M_PI/180*sin(i/M_PI/200);
+			servo_data.command_position[servo::STRL] = 
+									-12.0F*M_PI/180*sin(i/M_PI/200);
 			pose_update = false;
 			mtx_pose.unlock();
 
