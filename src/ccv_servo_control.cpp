@@ -30,20 +30,41 @@ class CcvServo : public DynamixelRobotSystem {
 void CcvServo::setup()
 {
     // disable anyway, for safety
-    torque_disable();
-    profile_acceleration( 500.0F);
+    svo[ROLL]->torque_disable();
+    svo[FORE]->torque_disable();
+    svo[REAR]->torque_disable();
+    svo[STRR]->torque_disable();
+    svo[STRL]->torque_disable();
+
+	usleep(1000*1000);	// waiting for standing up
+
+    svo[ROLL]->profile_acceleration( 500.0F);
+    svo[FORE]->profile_acceleration( 500.0F);
+    svo[REAR]->profile_acceleration( 500.0F);
+    svo[STRR]->profile_acceleration( 500.0F);
+    svo[STRL]->profile_acceleration( 500.0F);
 
 //  svo[STEER]->position_p_gain(0);
 
 	// Stand-up operation
-    torque_enable();
+ //   svo[ROLL]->torque_enable();
+    svo[ROLL]->torque_enable();
+    svo[FORE]->torque_enable();
+    svo[REAR]->torque_enable();
+    svo[STRR]->torque_enable();
+    svo[STRL]->torque_enable();
 
-	float goal[] = { -1, 3+1.5, 3-1.5, 0, 0 };
-	goal_position_deg(goal);
+	float goal[] = { 0, 3+0.0, 3-0.0, 0, 0 };
+//	sync_goal_position_deg(goal);
+	svo[0]->goal_position_deg(goal[0]);
+	svo[1]->goal_position_deg(goal[1]);
+	svo[2]->goal_position_deg(goal[2]);
+	svo[3]->goal_position_deg(goal[3]);
+	svo[4]->goal_position_deg(goal[4]);
 
 	usleep(3000*1000);	// waiting for standing up
 
-    profile_acceleration(1500.0F);
+//    profile_acceleration(1500.0F);
 }
 
 void CcvServo::run(Mosquitto* talker)
@@ -65,8 +86,8 @@ void CcvServo::run(Mosquitto* talker)
 
 		// Copying data from publisher
 		if(command_updated>0) {
-   			//ccvservo->sync_goal_position_rad(servo_data.command_position);
-   			goal_position_rad(servo_data.command_position);
+			//ccvservo->sync_goal_position_rad(servo_data.command_position);
+			sync_goal_position_rad(servo_data.command_position);
 			command_updated = 0;
 		}
 
